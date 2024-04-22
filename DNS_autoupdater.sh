@@ -22,25 +22,22 @@ if [[ $1 == "--setup" ]]; then
         cp ./src/env.sh.dist ./src/env.sh
     fi
 
-    askNumberedMenu "Who is your DNS provider ?" "Gandi Scaleway"
-    setup_provider=$ANSWER
-
-    askForValue "Please enter your Domain Name (example: google.com):"
+    askForValue "Please enter your Domain Name:"
     setup_DomainName=$ANSWER
 
-    askYesNo "Do you have a A record you use for your IPv4 address ? (Yes/No)"
+    askYesNo "Setup A record you use for your IPv4 address ? (Yes/No)"
     setup_isARecord=$ANSWER
     
     if [[ $setup_isARecord == true ]]; then
-        askForValue "Please enter your A record name:"
+        askForValue "Enter your A record name:"
         setup_ARecord=$ANSWER
     fi
 
-    askYesNo "Do you have a AAAA record you use for your IPv6 address ? (Yes/No)"
+    askYesNo "Setup AAAA record you use for your IPv6 address ? (Yes/No)"
     setup_isAAAARecord=$ANSWER
 
     if [[ $setup_isAAAARecord == true ]]; then
-        askForValue "Please enter your AAAA record name:"
+        askForValue "Enter your AAAA record name:"
         setup_AAAARecord=$ANSWER
     fi
 
@@ -48,8 +45,30 @@ if [[ $1 == "--setup" ]]; then
         echo "You need to setup at least one record type to use this script. Exiting."
         exit 0
     fi
-    
-    echo "Everything has been asked, please review the given values:"
+
+    askNumberedMenu "Who is your DNS provider ?" "Gandi Scaleway"
+    setup_provider=$ANSWER
+
+    # We call the specific provider init function
+    case "$setup_provider" in
+        "Gandi")
+            echo "Setuping Gandi provider"
+            . ./providers/gandi.sh
+            GANDI_init
+            sed -i -e 's/GandiAPIToken\=""/GandiAPIToken\="'"$setup_GandiAPIToken"'"/' src/env.sh
+            sed -i -e 's/GandiRecordTTL\=""/GandiRecordTTL\="'"$setup_GandiRecordTTL"'"/' src/env.sh
+            ;;
+        "Scaleway")
+            echo "Setuping Scaleway provider"
+            ;;
+        *)
+            echo "Provider unrecognized"
+            helper
+            exit 1
+            ;;
+    esac
+
+    echo "Everything has been asked, are the following values correct ?"
     echo "    Provider selected -> $setup_provider"
     if [[ ! -z $setup_ARecord ]]; then echo "    A record Name -> $setup_ARecord"; else echo "    No A record provided"; fi
     if [[ ! -z $setup_AAAARecord ]]; then echo "    AAAA record Name -> $setup_AAAARecord"; else echo "    No AAAA record provided"; fi 
@@ -60,9 +79,9 @@ if [[ $1 == "--setup" ]]; then
         exit 0
     else
         echo "Applying configuration according to the setup provided."
-        sed -i 's/DNSDomain=""/DNSDomain="'"$setup_DomainName"'"/' src/env.sh
-        sed -i 's/DNSRecordV4=""/DNSRecordV4="'"$setup_ARecord"'"/' src/env.sh
-        sed -i 's/DNSRecordV6=""/DNSRecordV6="'"$setup_AAAARecord"'"/' src/env.sh
+        sed -i -e 's/DNSDomain\=""/DNSDomain\="'"$setup_DomainName"'"/' src/env.sh
+        sed -i -e 's/DNSRecordV4\=""/DNSRecordV4\="'"$setup_ARecord"'"/' src/env.sh
+        sed -i -e 's/DNSRecordV6\=""/DNSRecordV6\="'"$setup_AAAARecord"'"/' src/env.sh
     fi
 
     askYesNo "Setup completed, do you with to execute the script now ?"
@@ -80,6 +99,8 @@ fi
 
 # Loading functions used for querying DNS informations
 . ./utils/dnfunctions.sh
+
+#### Process ####
 
 echo "Retrieving actual public IP in use for your workstation"
 ipaddr=$(curl -s ifconfig.me/ip)
@@ -106,12 +127,12 @@ else
 
     echo "Trying to update record"
 
-    #response=$(curl -X PUT https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $Gandi_APIToken" -H 'content-type: application/json' -d '{"rrset_values":["'"$ipaddr"'"],"rrset_ttl":300}')
+    #response=$(curl -X PUT https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $GandiAPIToken" -H 'content-type: application/json' -d '{"rrset_values":["'"$ipaddr"'"],"rrset_ttl":300}')
     #echo $response
     #checkError
 
     #echo "Checking if change is effective on provider configuration"
-    #response=$(curl -s -X GET https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $Gandi_APIToken")
+    #response=$(curl -s -X GET https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $GandiAPIToken")
     #checkError
 
     #DNSRecord=$(echo "$response" | jq -r '.rrset_values[0]')

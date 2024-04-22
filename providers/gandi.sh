@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# This function will ask all the appropriate values for initializing the environment file
+GANDI_init() {
+    askForValue "Enter your Gandi API Token:"
+    setup_GandiAPIToken=$ANSWER
+
+    askForValue "Enter in seconds the TTL you wish to configure your record with (min: 300):"
+    setup_GandiRecordTTL=$ANSWER
+}
+
 # This function retrieves the given record name value from Gandi DNS servers
 GANDI_retrieveRecordValue() {
 
