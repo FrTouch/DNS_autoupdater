@@ -33,12 +33,11 @@ Not supported at the moment.
 
 ## II/ Initialization
 
-Coming soon.
+Initialize the script by running the command `./DNS_autoupdater.sh --setup`.
+The script will ask you a set of question in order to easily setup your environment.
 
 ## III/ Usage
 
 Run the script with:
 
 `./DNS_autoupdater.sh`
-
-## IV/ Usage
