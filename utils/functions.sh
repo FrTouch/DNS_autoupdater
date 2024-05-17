@@ -4,7 +4,7 @@
 checkError() {
     return_code=$?
     if [ $return_code -eq 0 ]; then
-        echo "  OK"
+        echo "  Command OK"
     else
         echo "Error while executing command, error code : $return_code"
         return $return_code

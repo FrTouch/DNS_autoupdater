@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This function will ask all the appropriate values for initializing the environment file
-GANDI_init() {
+Gandi_init() {
     askForValue "Enter your Gandi API Token:"
     setup_GandiAPIToken=$ANSWER
 
@@ -10,13 +10,20 @@ GANDI_init() {
 }
 
 # This function retrieves the given record name value from Gandi DNS servers
-GANDI_retrieveRecordValue() {
+Gandi_retrieveRecordValue() {
+    echo "Checking record value"
+    response=$(curl -s -X GET https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $GandiAPIToken")
+    checkError
 
+    Provider_DNSRecordValue=$(echo "$response" | jq -r '.rrset_values[0]')
 }
 
 # This function updates the given record name value on Gandi DNS servers
-GANDI_updateRecordValue() {
-
+Gandi_updateRecordValue() {
+    echo "Updating record $DNSDomain.$recordToCheck with value $ipaddr"
+    response=$(curl -X PUT https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $GandiAPIToken" -H 'content-type: application/json' -d '{"rrset_values":["'"$ipaddr"'"],"rrset_ttl":["'"$GandiRecordTTL"'"]}')
+    echo $response
+    checkError
 }
 
 

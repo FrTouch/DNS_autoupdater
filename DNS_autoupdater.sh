@@ -46,15 +46,15 @@ if [[ $1 == "--setup" ]]; then
         exit 0
     fi
 
-    askNumberedMenu "Who is your DNS provider ?" "Gandi Scaleway"
+    askNumberedMenu "Who is your DNS provider ?" "Gandi OVH(soon) Scaleway(soon)"
     setup_provider=$ANSWER
 
     # We call the specific provider init function
     case "$setup_provider" in
         "Gandi")
             echo "Setuping Gandi provider"
-            . ./providers/gandi.sh
-            GANDI_init
+            Gandi_init
+            sed -i -e 's/DNSProvider\=""/DNSProvider\="'"$setup_provider"'"/' src/env.sh
             sed -i -e 's/GandiAPIToken\=""/GandiAPIToken\="'"$setup_GandiAPIToken"'"/' src/env.sh
             sed -i -e 's/GandiRecordTTL\=""/GandiRecordTTL\="'"$setup_GandiRecordTTL"'"/' src/env.sh
             ;;
@@ -100,20 +100,25 @@ fi
 # Loading functions used for querying DNS informations
 . ./utils/dnfunctions.sh
 
+# Loading providers functions
+. ./providers/gandi.sh
+
 #### Process ####
 
 echo "Retrieving actual public IP in use for your workstation"
 ipaddr=$(curl -s ifconfig.me/ip)
 checkError
-echo "Checking IP Address retrieved"
+echo "Checking IP Address type"
 checkip $ipaddr
+
+echo "Your provider configured is $DNSProvider"
 
 echo "Checking DNS record value for record $recordToCheck.$DNSDomain"
 getDNSRecordValue $recordToCheck.$DNSDomain $recordType
 checkError
 echo "DNS record value for record $recordToCheck.$DNSDomain is: $DNSrecordValue"
 
-if [ $DNSrecordValue == $ipaddr ]; then
+if [[ $DNSrecordValue == $ipaddr ]]; then
     echo "Actual IP address equals the DNS record, there is nothing to do."
     exit 0
 else
@@ -126,21 +131,18 @@ else
     fi
 
     echo "Trying to update record"
+    eval "${DNSProvider}_updateRecordValue"
 
-    #response=$(curl -X PUT https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $GandiAPIToken" -H 'content-type: application/json' -d '{"rrset_values":["'"$ipaddr"'"],"rrset_ttl":300}')
-    #echo $response
-    #checkError
+    echo "Verifying if values has been applied"
+    eval "${DNSProvider}_retrieveRecordValue"
 
-    #echo "Checking if change is effective on provider configuration"
-    #response=$(curl -s -X GET https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $GandiAPIToken")
-    #checkError
+    
+    if [[ $Provider_DNSRecordValue == $ipaddr ]]; then
+      echo "Record has been updated successfully"
+      echo "Verifying name resolution to check if name have been propagated (TODO)"
 
-    #DNSRecord=$(echo "$response" | jq -r '.rrset_values[0]')
-
-    #if [ $DNSRecord == $ipaddr ]; then
-    #  echo "Record has been changed successfully"
-    #else
-    #  echo "Record hasn't changed"
-    #fi
+    else
+      echo "Record couldn't be changed"
+    fi
 
 fi
