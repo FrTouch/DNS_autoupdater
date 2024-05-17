@@ -122,27 +122,36 @@ if [[ $DNSrecordValue == $ipaddr ]]; then
     echo "Actual IP address equals the DNS record, there is nothing to do."
     exit 0
 else
-    askYesNo "Actual IP differs from the DNS record, do you wish to update it with your actual Public IP ?"
-    updateDNS=$ANSWER
-
-    if [[ $updateDNS == false ]]; then
-        echo "DNS record will not be updated."
-        exit 0
-    fi
-
-    echo "Trying to update record"
-    eval "${DNSProvider}_updateRecordValue"
-
-    echo "Verifying if values has been applied"
+    echo "Actual IP differs from the DNS response, checking directly on providers configuration"
     eval "${DNSProvider}_retrieveRecordValue"
-
     
     if [[ $Provider_DNSRecordValue == $ipaddr ]]; then
-      echo "Record has been updated successfully"
-      echo "Verifying name resolution to check if name have been propagated (TODO)"
-
+        echo "Actual IP address equals the DNS provider record value, there is nothing to do."
+        exit 0
     else
-      echo "Record couldn't be changed"
+
+        askYesNo "Actual IP differs from the DNS record configuration on the provider, do you wish to update it with your actual Public IP ?"
+        updateDNS=$ANSWER
+
+        if [[ $updateDNS == false ]]; then
+            echo "DNS record will not be updated."
+            exit 0
+        fi
+
+       echo "Trying to update record"
+        eval "${DNSProvider}_updateRecordValue"
+
+        echo "Verifying if values has been applied"
+        eval "${DNSProvider}_retrieveRecordValue"
+
+    
+        if [[ $Provider_DNSRecordValue == $ipaddr ]]; then
+          echo "Record has been updated successfully"
+          echo "Verifying name resolution to check if name have been propagated (TODO)"
+        else
+          echo "Record couldn't be changed"
+        fi
+        
     fi
 
 fi
