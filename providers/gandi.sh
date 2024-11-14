@@ -20,7 +20,7 @@ Gandi_retrieveRecordValue() {
 
 # This function updates the given record name value on Gandi DNS servers
 Gandi_updateRecordValue() {
-    echo "Updating record $DNSDomain.$recordToCheck with value $ipaddr"
+    echo "Updating record $recordToCheck.$DNSDomain with value $ipaddr"
     response=$(curl -X PUT https://api.gandi.net/v5/livedns/domains/$DNSDomain/records/$recordToCheck/$recordType -H "authorization: Bearer $GandiAPIToken" -H 'content-type: application/json' -d '{"rrset_values":["'"$ipaddr"'"],"rrset_ttl":'$GandiRecordTTL'}')
     echo $response
     checkError

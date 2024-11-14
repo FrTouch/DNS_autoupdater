@@ -6,17 +6,26 @@ This Bash script can be used to automatically update an A or AAAA type DNS recor
 
 Currently supports the following DNS providers:
     - GANDI LiveDNS API
+    - OVH API
 
 ## I/ Pre-requisites
 
-There may be some pre-requisites, depending on your environment.
+This part describes the different pre-requisites to meet in order to use this module.
+
+### API Token / Credentials
+
+You will need to create an API Token, or generate credential in order to use the API of your provider.
+Also, and as a security warning, make sure (if possible) to limit the scope of your token / credentials only to retrieve / update DNS records information.
 
 ### OS Requirements by type
+
+There may be some pre-requisites, depending on your environment.
 
 - For **MacOS** systems
 
 Install Homebrew by using the comment `/bin/bash -c "$(curl -fsSL raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 Install JQ package with `brew install jq`
+Install md5sha1sum with `brew install md5sha1sum`
 
 - For **Debian/Ubuntu-based** systems
 
@@ -29,7 +38,8 @@ Install JQ package with `sudo dnf install jq`
 
 - For **Windows** systems
 
-Not supported at the moment.
+Please use WSL with windows, in order to use this script.
+https://learn.microsoft.com/fr-fr/windows/wsl/install
 
 ## II/ Initialization
 

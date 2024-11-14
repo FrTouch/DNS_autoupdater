@@ -46,7 +46,7 @@ if [[ $1 == "--setup" ]]; then
         exit 0
     fi
 
-    askNumberedMenu "Who is your DNS provider ?" "Gandi OVH(soon) Scaleway(soon)"
+    askNumberedMenu "Who is your DNS provider ?" "Gandi OVH(Dev) Scaleway(TBD)"
     setup_provider=$ANSWER
 
     # We call the specific provider init function
@@ -57,6 +57,10 @@ if [[ $1 == "--setup" ]]; then
             sed -i -e 's/DNSProvider\=""/DNSProvider\="'"$setup_provider"'"/' src/env.sh
             sed -i -e 's/GandiAPIToken\=""/GandiAPIToken\="'"$setup_GandiAPIToken"'"/' src/env.sh
             sed -i -e 's/GandiRecordTTL\=""/GandiRecordTTL\="'"$setup_GandiRecordTTL"'"/' src/env.sh
+            ;;
+        "OVH")
+            echo "Setuping OVH provider"
+            OVH_init
             ;;
         "Scaleway")
             echo "Setuping Scaleway provider"
@@ -127,6 +131,7 @@ else
     
     if [[ $Provider_DNSRecordValue == $ipaddr ]]; then
         echo "Actual IP address equals the DNS provider record value, there is nothing to do."
+        echo "You may need to wait for DNS servers to propagate your new record value if changed recently."
         exit 0
     else
 
@@ -138,7 +143,7 @@ else
             exit 0
         fi
 
-       echo "Trying to update record"
+        echo "Trying to update record"
         eval "${DNSProvider}_updateRecordValue"
 
         echo "Verifying if values has been applied"
@@ -151,7 +156,7 @@ else
         else
           echo "Record couldn't be changed"
         fi
-        
+
     fi
 
 fi
